@@ -35,7 +35,7 @@ impl Plugin for InputPlugin {
                     // IMPORTANT: the commands must be flushed after `touch_pick_events` is run
                     // because we need pointer spawning to happen immediately to prevent issues with
                     // missed events during drag and drop.
-                    apply_system_buffers,
+                    apply_deferred,
                 )
                     .chain()
                     .in_set(PickSet::Input),

@@ -1,11 +1,12 @@
-//! A raycasting backend for [`bevy_egui`]
+//! A raycasting backend for [`bevy_egui`]. This backend simply ensures that egui blocks other
+//! entities from being picked.
 
 #![allow(clippy::type_complexity)]
 #![allow(clippy::too_many_arguments)]
 #![deny(missing_docs)]
 
 use bevy::{prelude::*, render::camera::NormalizedRenderTarget};
-use bevy_egui::EguiContext;
+use bevy_egui::{EguiContext, EguiSet};
 use bevy_picking_core::backend::prelude::*;
 
 /// Commonly used imports for the [`bevy_picking_egui`](crate) crate.
@@ -17,11 +18,15 @@ pub mod prelude {
 /// picked.
 #[derive(Clone)]
 pub struct EguiBackend;
-impl PickingBackend for EguiBackend {}
 impl Plugin for EguiBackend {
     fn build(&self, app: &mut App) {
-        app.add_systems(PreUpdate, egui_picking.in_set(PickSet::Backend))
-            .insert_resource(EguiBackendSettings::default());
+        app.add_systems(
+            Update,
+            egui_picking
+                .in_set(PickSet::Backend)
+                .after(EguiSet::BeginFrame),
+        )
+        .insert_resource(EguiBackendSettings::default());
 
         #[cfg(feature = "selection")]
         app.add_systems(First, update_settings);

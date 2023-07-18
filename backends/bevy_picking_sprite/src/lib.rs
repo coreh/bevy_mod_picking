@@ -18,7 +18,6 @@ pub mod prelude {
 /// Adds picking support for [`bevy_sprite`](bevy::sprite)
 #[derive(Clone)]
 pub struct SpriteBackend;
-impl PickingBackend for SpriteBackend {}
 impl Plugin for SpriteBackend {
     fn build(&self, app: &mut App) {
         app.add_systems(PreUpdate, sprite_picking.in_set(PickSet::Backend));
@@ -52,7 +51,7 @@ pub fn sprite_picking(
         pointer_location.location().map(|loc| (pointer, loc))
     }) {
         let mut blocked = false;
-        let (cam_entity, camera, cam_transform) = cameras
+        let Some((cam_entity, camera, cam_transform)) = cameras
             .iter()
             .find(|(_, camera, _)| {
                 camera
@@ -60,12 +59,14 @@ pub fn sprite_picking(
                     .normalize(Some(primary_window.single()))
                     .unwrap()
                     == location.target
-            })
-            .unwrap_or_else(|| panic!("No camera found associated with pointer {:?}.", pointer));
+            }) else {
+                continue;
+            };
 
-        let Some(cursor_pos_world) = camera.viewport_to_world_2d(cam_transform, location.position) else {
-            continue;
-        };
+        let Some(cursor_pos_world) =
+            camera.viewport_to_world_2d(cam_transform, location.position) else {
+                continue;
+            };
 
         let picks: Vec<(Entity, HitData)> = sorted_sprites
             .iter()
